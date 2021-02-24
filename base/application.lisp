@@ -27,8 +27,6 @@
 
 (defvar *application*)
 
-(QL:system-apropos 'fifo)
-
 (defclass application ()
   ((3d-api :initform :gl :initarg :3d-api :reader 3d-api)
    (window-backend :initarg :window-backend :reader window-backend)
@@ -60,19 +58,19 @@
 
 (defun make-application (&key (3d-api :gl)
                            (window-backend :default)
-                           (context-backend :default))
+                           (context-backend :default)
+                           (connect t))
   (when (or (not window-backend)
             (eql window-backend :default))
     (setf window-backend (default-window-system-backend-for-api 3d-api)))
   (when (or (not context-backend)
             (eql context-backend :default))
     (setf context-backend (default-context-backend-for-api 3d-api)))
-  ()
   (make-instance
    'application
    :3d-api 3d-api
    :window-backend  window-backend
-   :context-backend  context-backend
+   :context-backend context-backend
    ;; if we already have an application connected, use its connection
    ;; if it matches this on (mainly intended for OSX, but also needed
    ;; if someone starts multiple applications on 1 thread in windows,
@@ -81,19 +79,23 @@
                                        (eql window-backend
                                             (window-backend *application*)))
                                   (window-backend-connection *application*)
-                                  (make-backend-connection window-backend))))
+                                  (when connect
+                                    (make-backend-connection window-backend)))))
 
 
 (defmacro with-application ((&key (3d-api :gl)
                                (window-backend :default)
                                (context-backend :default))
                             &body body)
-  `(let ((*application* (make-application :3d-api ,3d-api
-                                          :window-backend ,window-backend
-                                          :context-backend ,context-backend)))
-     (unwind-protect
-          (progn,@body)
-       (destroy-backend-connection (window-backend-connection *application*)))))
+  `(with-simple-restart (quit "quit")
+     (let ((*application* (make-application :3d-api ,3d-api
+                                            :window-backend ,window-backend
+                                            :context-backend ,context-backend)))
+       (unwind-protect
+            (with-simple-restart (quit "quit")
+              (progn,@body))
+         (when (window-backend-connection *application*)
+           (destroy-backend-connection (window-backend-connection *application*)))))))
 
 
 ;; not sure about these APIs...

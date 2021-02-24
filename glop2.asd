@@ -149,11 +149,29 @@
   :version "0.1.0"
   :author "Bart Botta <00003b at gmail.com>"
   :description "Glop2 drm backend"
-  :depends-on (:glop2/base :cl-drm :cl-gbm :dbus)
+  :depends-on (:glop2/base
+               :cl-drm
+               :cl-gbm
+               ;; fixme: decide on proper separation between drm and egl
+               ;; and possibly remove this
+               :cl-egl
+               :dbus
+               :osicat
+               :cl-libinput
+               :bordeaux-threads
+               :atomics
+               :chanl)
   :components
   ((:module "backend/drm"
     :serial t
-    :components ())))
+    :components ((:file "package")
+                 (:file "console")
+                 (:file "udev")
+                 (:file "input")
+                 (:file "epoll")
+                 (:file "event-thread")
+                 (:file "drm")
+                 (:file "session")))))
 
 
 #++
@@ -320,9 +338,13 @@
   :author "Bart Botta <00003b at gmail.com>"
   :depends-on (:glop2/base
                ;; probably unix only, but let users try anyway
-               :glop2/ffi-drm :glop2/ffi-egl)
+               :glop2/backend-drm
+               :glop2/backend-egl)
   :components
-  ((:module "glop2"
+  ((:module "backend/egl"
+    :serial t
+    :components ((:file "egl-drm")))
+   (:module "glop2"
     :serial t
     :components ())))
 

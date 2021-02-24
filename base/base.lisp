@@ -83,6 +83,6 @@
     :red-size 4
     :green-size 4
     :blue-size 4
-                                        ;:alpha-size 4
+    ;;:alpha-size 4
     :depth-size 16))
 

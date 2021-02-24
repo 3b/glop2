@@ -39,10 +39,10 @@
                            (req (subseq a 0 k))
                            (key (subseq a k)))
                       `(defmethod ,(car name)
-                          ((object ,from)
-                           ,@req
-                           &rest ,r
-                             ,@key)
+                           ((object ,from)
+                            ,@req
+                            &rest ,r
+                              ,@key)
                          (declare (ignore ,@(cdr key)))
                          (apply #',(car name) (,to object) ,@req ,r)))
                     `(defmethod ,(car name)
@@ -67,8 +67,7 @@
                     `(defmethod (setf ,(car name))
                          (,new (object ,from) ,@ (cdr name))
                        (,(car name) ,new (,to object)
-                        ,@(cdr name))))))
-)
+                        ,@(cdr name)))))))
            (redirect-accessor (name from to)
              `(progn
                 (redirect-method ,name ,from ,to)
@@ -141,8 +140,7 @@
                           parent
                           (events '(on-key on-button on-mouse-wheel
                                     on-resize on-close))
-                          background
-                          )
+                          background)
   ;; not sure if this should keep any existing event mask?
   (clrhash (event-mask w))
   (loop for e in events do (setf (gethash e (event-mask w)) t))
@@ -196,8 +194,7 @@
            #++(format *debug-io* "%blit ~sx~s to ~s,~s~%" ,width ,height ,dx ,dy)
            (%blit-pointer (platform-window ,win)
                           (static-vectors:static-vector-pointer ,buffer)
-                          ,dx ,dy ,width ,height)))))
-  )
+                          ,dx ,dy ,width ,height))))))
 
 (defmethod glop2::blit ((from window) fx fy w h
                         (to window) tx ty)
@@ -215,3 +212,17 @@
 
 (defmethod create-pixmap ((a window) w h)
   (create-pixmap (platform-window a) w h))
+
+(defmacro glop2::with-open-window ((window title width height
+                                    &rest args
+                                    &key x y attribs parent events background
+                                    &allow-other-keys)
+                                   &body body)
+  ;; &key args are just here for autodoc, and may be out of sync with
+  ;; open-window, so check that for full list
+  (declare (ignore x y attribs parent events background))
+  `(progn
+     (glop2:open-window ,window ,title ,width ,height ,@args)
+     (unwind-protect
+          (progn ,@body)
+       (glop2:close-window ,window))))

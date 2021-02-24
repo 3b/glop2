@@ -110,6 +110,10 @@
    #:get-cursor-pos
    #:event-mask
    #:on-paint
-   #:with-blit))
+   #:with-blit
+   #:on-touch-down
+   #:on-touch-up
+   #:on-touch-motion
+   #:on-touch-frame))
 
 

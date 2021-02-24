@@ -32,6 +32,10 @@ Note that this has no effect on the underlying window system."
                               :blocking blocking))))
       e)))
 
+(defmethod %next-event :around (win &key)
+  (with-simple-restart (:continue "continue")
+    (call-next-method)))
+
 (defmethod %next-event ((win window) &key blocking)
   (%next-event (application win) :blocking blocking :window win))
 
@@ -83,6 +87,16 @@ Returns NIL on ON-DESTROY event of last open window, T otherwise."
 (defgeneric on-start-resize (window))
 (defgeneric on-resize (window x y w h))
 (defgeneric on-end-resize (window))
+
+;; quick hack touch API based on libinput. 'slot' is index of touch,
+;; 'frame' event marks end of a single sample of touch state (for
+;; example with multitouch, might have up/down/motion in a single
+;; frame for each finger
+(defgeneric on-touch-down (window slot x y))
+(defgeneric on-touch-motion (window slot x y))
+(defgeneric on-touch-up (window slot))
+(defgeneric on-touch-frame (window))
+
 
 ;; these are here for completeness but default methods are provided
 (defgeneric on-visibility (window visible))
